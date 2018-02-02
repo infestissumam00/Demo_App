@@ -1,9 +1,10 @@
 import React,{Component}from 'react';
-import { AppRegistry,View,Text,StyleSheet,TouchableOpacity,Image, AsyncStorage,ToastAndroid } from 'react-native';
+import { AppRegistry,View,NetInfo,Text,StyleSheet,TouchableOpacity,Image, AsyncStorage,ToastAndroid } from 'react-native';
+import {NavigationActions} from 'react-navigation';
 import Component5 from './Component5';
 import Base64 from "base-64"
-export default class Component9 extends Component{
 
+export default class Component9 extends Component{
   constructor(props) {
       super(props);
 
@@ -13,8 +14,20 @@ export default class Component9 extends Component{
   }
 
   logout=(navigation) => {
-      const hash = Base64.encode('bayer:bayer#123')
-      let value = AsyncStorage.getItem('myAccessToken')
+
+    NetInfo.isConnected.fetch()
+    .then(isConnected => {
+    if(isConnected)
+    {
+    const resetAction = NavigationActions.reset(
+      {
+        index: 0,
+        actions:[
+          NavigationActions.navigate({routeName: 'Home'})
+        ]
+      }
+    )
+       AsyncStorage.getItem('myAccessToken')
       .then((value)=> {
 
           return fetch('http://13.127.76.18:8080/digitrial/api/user/logout', {
@@ -43,19 +56,29 @@ export default class Component9 extends Component{
           }).then(() =>{
               AsyncStorage.removeItem('myAccessToken').then(() =>{
                   //alert('here')
-                  navigation.navigate('Home')
+                  navigation.dispatch(resetAction)
                   ToastAndroid.show(
                      'Logged out successfully!',
                      ToastAndroid.SHORT,
                      ToastAndroid.BOTTOM
                   );
 
-              })
+               })
+            })
+         })
+       }
+       else{
+            ToastAndroid.show(
+            'No Internet Connection!',
+            ToastAndroid.SHORT,
+            ToastAndroid.BOTTOM
+         );
+       }
+     })
+      .catch(() =>{
 
-
-          })
-  })
-  }
+      });
+   }
 
   render(){
     return(
