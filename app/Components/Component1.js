@@ -1,5 +1,5 @@
 import React,{Component}from 'react';
-import { AppRegistry,View,Text,StyleSheet,Image,TextInput,TouchableOpacity,KeyboardAvoidingView,Picker,ToastAndroid,Slider,Switch,AsyncStorage,renderIf } from 'react-native';
+import { AppRegistry,View,Text,NetInfo,StyleSheet,Image,TextInput,TouchableOpacity,KeyboardAvoidingView,Picker,ToastAndroid,Slider,Switch,AsyncStorage,renderIf } from 'react-native';
 import Base64 from 'base-64';
 export default class myapp extends Component{
   constructor(props) {
@@ -9,90 +9,107 @@ export default class myapp extends Component{
 
   login = (navigation) =>
   {
-    const reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (reg.test(this.state.text1) == true && this.state.text2 != '')
+    NetInfo.isConnected.fetch()
+    .then(isConnected => {
+    if(isConnected)
     {
-          const hash = Base64.encode('bayer:bayer#123');
-          var formData = new FormData()
-          formData.append('grant_type','password')
-          formData.append('scope','webclient')
-          formData.append('username',this.state.text1)
-          formData.append('password',this.state.text2)
-
-          return fetch('http://13.127.76.18:8080/digitrial/oauth/token',
+        const reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        if (reg.test(this.state.text1) == true && this.state.text2 != '')
         {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Basic '+hash,
-            'Accept': 'application/json',
-            'Content-Type':'multipart/formData'
-          },
-          body: formData,
-        }).then((response) => {
+              const hash = Base64.encode('bayer:bayer#123');
+              var formData = new FormData()
+              formData.append('grant_type','password')
+              formData.append('scope','webclient')
+              formData.append('username',this.state.text1)
+              formData.append('password',this.state.text2)
 
-          if(response.status === 200) {
-            //alert('here')
-            //alert('Success')
-            return response.json();
-          }
-          else if(response.status === 400) {
-            ToastAndroid.show(
-               'Either Username or Password is incorrect!',
-               ToastAndroid.SHORT,
-               ToastAndroid.BOTTOM
-            );
-          }
-          else{
-              return 'nCon'
-          }
-        }).then((responseJson) => {
-          if(responseJson!= 'nCon'){
-          this.setState({aToken: responseJson.access_token , flag:true});
-          AsyncStorage.setItem('myAccessToken', this.state.aToken);
-          //alert(this.state.aToken);
-          navigation.navigate('Movies')
+              return fetch('http://13.127.76.18:8080/digitrial/oauth/token',
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Basic '+hash,
+                'Accept': 'application/json',
+                'Content-Type':'multipart/formData'
+              },
+              body: formData,
+            }).then((response) => {
+
+              if(response.status === 200) {
+                //alert('here')
+                //alert('Success')
+                return response.json();
+              }
+              else if(response.status === 400) {
+                ToastAndroid.show(
+                   'Either Username or Password is incorrect!',
+                   ToastAndroid.SHORT,
+                   ToastAndroid.BOTTOM
+                );
+              }
+              else{
+                  return 'nCon'
+              }
+            }).then((responseJson) => {
+              if(responseJson!= 'nCon'){
+              this.setState({aToken: responseJson.access_token , flag:true});
+              AsyncStorage.setItem('myAccessToken', this.state.aToken);
+              //alert(this.state.aToken);
+              navigation.navigate('Movies')
+            }
+            else{
+              ToastAndroid.show(
+                 'Server Error',
+                 ToastAndroid.SHORT,
+                 ToastAndroid.BOTTOM
+               );
+            }
+          })
+            .catch((error)=>{
+              //alert('error')
+            })
         }
-        else{
+        else if(reg.test(this.state.text1) == true && this.state.text2 == ''){
           ToastAndroid.show(
-             'Server Error',
+             'Password cannot be empty!',
              ToastAndroid.SHORT,
              ToastAndroid.BOTTOM
-           );
+          );
         }
-      })
-        .catch((error)=>{
-          //alert('error')
-        })
-    }
-    else if(reg.test(this.state.text1) == true && this.state.text2 == ''){
-      ToastAndroid.show(
-         'Password cannot be empty!',
-         ToastAndroid.SHORT,
-         ToastAndroid.BOTTOM
-      );
-    }
 
-    else if(reg.test(this.state.text1) == false && this.state.text2 != ''){
-      ToastAndroid.show(
-         'Username format is invalid!',
-         ToastAndroid.SHORT,
-         ToastAndroid.BOTTOM
-      );
-    }
-    else if(reg.test(this.state.text1) == false || this.state.text2 == ''){
-      ToastAndroid.show(
-         'Username/Password is invalid!',
-         ToastAndroid.SHORT,
-         ToastAndroid.BOTTOM
-      );
-    }
-    else {
-      ToastAndroid.show(
-         'Something went wrong!',
-         ToastAndroid.SHORT,
-         ToastAndroid.BOTTOM
-      );
-    }
+        else if(reg.test(this.state.text1) == false && this.state.text2 != ''){
+          ToastAndroid.show(
+             'Username format is invalid!',
+             ToastAndroid.SHORT,
+             ToastAndroid.BOTTOM
+          );
+        }
+        else if(reg.test(this.state.text1) == false || this.state.text2 == ''){
+          ToastAndroid.show(
+             'Username/Password is invalid!',
+             ToastAndroid.SHORT,
+             ToastAndroid.BOTTOM
+          );
+        }
+        else {
+          ToastAndroid.show(
+             'Something went wrong!',
+             ToastAndroid.SHORT,
+             ToastAndroid.BOTTOM
+          );
+        }
+  }
+       else
+       {
+         ToastAndroid.show(
+            'No Internet Connection!',
+            ToastAndroid.SHORT,
+            ToastAndroid.BOTTOM
+         );
+       }
+})
+  .catch(() =>{
+  });
+
  }
 //
 //  deleteToken= () => {
@@ -104,12 +121,12 @@ export default class myapp extends Component{
 componentWillMount()
 {
 
-  const value =  AsyncStorage.getItem('myAccessToken')
+   AsyncStorage.getItem('myAccessToken')
   .then((value)=>{
   if (value != null){
     //alert("You are already logged in "+value)
     this.setState({flag:true,text1:'yael.dvori@bayer.com',text2:'password'})
-    this.login(this.props.navigation);
+    this.props.navigation.navigate('Movies')
   }
   else{
     //alert('not logged in...')
@@ -119,7 +136,7 @@ componentWillMount()
 }
 
     render(){
-      let {flag} = this.state;
+      //let {flag} = this.state;
     return(
 
     <View style={styles.container}>
