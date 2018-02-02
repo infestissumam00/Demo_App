@@ -1,5 +1,5 @@
 import React,{Component}from 'react';
-import { Modal,AppRegistry,View,Text,StyleSheet,ToastAndroid,TouchableOpacity,FlatList,ActivityIndicator,RefreshControl,NetInfo,connectionInfo,Image} from 'react-native';
+import { Modal,AppRegistry,AsyncStorage,View,Text,StyleSheet,ToastAndroid,TouchableOpacity,FlatList,ActivityIndicator,RefreshControl,NetInfo,connectionInfo,Image} from 'react-native';
 //import Modal from 'react-native-modal';
 const contData = [
   {title:"Star Wars", desc:"Luke and Han Solo must free Princess Leia, the leader of the Rebel Alliance, who is held captive by Darth, and destroy a space station that has the potential to wipe away the entire planet.",img:require("./images/SW.jpg")},
@@ -67,14 +67,24 @@ componentWillMount() {
         ToastAndroid.SHORT,
         ToastAndroid.BOTTOM
      );
-   }
-
+      AsyncStorage.getItem('myMovieList')
+       .then((value)=>{
+       if (value != null){
+       //alert("You are already logged in "+value)
+       this.setState({data: JSON.parse(value),isLoading: false})
+       }
+       else
+       {
+         alert("No Internet")
+       }
+   });
+ }
 });
  this.changeConnection();
 }
 
 showMessage = (isConnected)=>{
-  alert("You are "+ (isConnected?"Online":"offline"))
+  //alert("You are "+ (isConnected?"Online":"offline"))
   if(this.isConnected){
     this.getMovies()
   }
@@ -94,13 +104,14 @@ getMovies() {
       })
     .then((responseJson) => {
       this.setState({data:responseJson.movies,isLoading:false});
+      AsyncStorage.setItem('myMovieList', JSON.stringify(this.state.data));
     })
 
   .catch((error) => {
-      if (error.status){
-        alert('Unable to fetch movies');
-      }
-      else{alert("You are offline")}
+      // if (error.status){
+      //   alert('Unable to fetch movies');
+      // }
+      // else{alert("You are offline")}
     });
 }
 
